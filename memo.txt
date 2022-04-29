@@ -1,0 +1,20 @@
+# Rustローカル環境構築
+$ brew install rustup-init
+$ rustup-init
+$ exec $SHELL -l
+
+コンパイラ
+$ rustc --version
+
+ビルドシステム, パッケージマネージャ
+$ cargo --version
+
+# 実行方法
+## rustc
+$ rustc main.rs 
+$ ./main
+
+## cargo
+$ cargo new <project_name>
+$ cd <project_name>
+$ cargo run
