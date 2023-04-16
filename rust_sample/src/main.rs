@@ -14,16 +14,16 @@ fn main() {
         // 所有権:仮   値:不変 (ポインタ的なもの?
         let c = &a;
         let d = &a;
-        
+
         // 所有権:仮   値:可変
         let mut e = 10;
         let f = &mut e;
         *f = 20;
         // let g = &mut a; cannot borrow `a` as mutable, as it is not declared as mutable
-        
+
         println!("a:{}, b:{}, c:{}, d:{}, f:{}",a, b, c, d, f);
     }
-    
+
     {
         // スライス
         let a = [1,2,3,4,5];
@@ -64,7 +64,7 @@ fn main() {
         println!("{}", rslt3) // 42
     }
 
-    {   
+    {
         // for式
         for i in 1..10 {
             println!("for {}", i);
@@ -90,7 +90,7 @@ fn main() {
             } else {
                 println!("{}", num)
             }
-            
+
             num += 1;
             if num > 30 {
                 break
@@ -99,5 +99,22 @@ fn main() {
 
         let b = false;
         println!("{}",if b {"b is true"} else {"b is false"});
+    }
+
+    {
+        // 構造体
+        struct User {
+            id: i32,
+            username: String,
+            email: String,
+        }
+
+        let user1 = User{
+            id: 1,
+            username: String::from("Mike"),
+            email: String::from("mike@example.com"),
+        };
+
+        println!("user1: {}, {}, {}", user1.id, user1.username, user1.email);
     }
 }
