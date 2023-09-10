@@ -1,11 +1,20 @@
+use sqlx::PgPool;
 use std::net::TcpListener;
-use web_prod::run;
+use web_prod::configuration::get_configuration;
+use web_prod::startup::run;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    // ?はエラーが起きたらリターンするという意味。この場合はエラーステータスでプログラムが終了する
-    let address = TcpListener::bind("127.0.0.1:8000")?;
-    println!("Listening on http://{}", address.local_addr()?);
+    // 設定ファイルを読み込む
+    let configuration = get_configuration().expect("Failed to read configuration.");
+    // Postgresに接続 (PgConnectionは単一のデータベース接続だが、PgPoolはコネクションプール)
+    let connection_pool = PgPool::connect(&configuration.database.connection_string())
+        .await
+        .expect("Failed to connect to Postgres.");
+
+    let address = format!("127.0.0.1:{}", configuration.application_port);
+    println!("Listening on http://{}", address);
+    let listener = TcpListener::bind(address)?;
     // Actix-webサーバを非同期に移動して、awaitで待機する
-    run(address)?.await
+    run(listener, connection_pool)?.await
 }

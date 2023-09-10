@@ -19,8 +19,25 @@ name = "web_prod"
 
 [dependencies]
 actix-web = "4"
+# serdeはシリアライズ/デシリアライズを行うライブラリ。derievは構造体の前にマクロをつけられるようにする
+serde = { version = "1.0.188", features = ["derive"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-
+config = "0.13"
+chrono = "0.4.30"
+uuid = { version = "1.4.1", features = ["v4"] }
 
 [dev-dependencies]
 reqwest = "0.11"
+
+# sqlxはSQLを実行するためのライブラリ
+[dependencies.sqlx]
+version = "0.6"
+default-features = false
+features = [
+    "runtime-actix-rustls",  # Actix用のランタイムとRustls（Rust製のTLSライブラリ）を有効化
+    "macros",                # sqlxのマクロ（例えば、query! マクロなど）を有効化
+    "postgres",              # PostgreSQLデータベースを使用するための機能を有効化
+    "uuid",                  # UUID型を扱うための機能を有効化
+    "chrono",                # 日付と時刻を扱うための機能（chronoライブラリとの連携）を有効化
+    "migrate"                # データベースのマイグレーション機能を有効化
+]
