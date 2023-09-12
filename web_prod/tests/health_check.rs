@@ -1,8 +1,26 @@
+use once_cell::sync::Lazy;
+use secrecy::ExposeSecret;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::net::TcpListener;
 use uuid::Uuid;
 use web_prod::configuration::{get_configuration, DatabaseSettings};
 use web_prod::startup::run;
+use web_prod::telemetry::{get_subscriber, init_subscriber};
+
+// ログ設定を一度だけ初期化する
+static TRACING: Lazy<()> = Lazy::new(|| {
+    let default_filter_level = "info".to_string();
+    let subscriber_name = "test".to_string();
+    if std::env::var("TEST_LOG").is_ok() {
+        // ログを標準出力に出力する
+        let subscriber = get_subscriber(subscriber_name, default_filter_level, std::io::stdout);
+        init_subscriber(subscriber);
+    } else {
+        // ログ出力を無効にする
+        let subscriber = get_subscriber(subscriber_name, default_filter_level, std::io::sink);
+        init_subscriber(subscriber);
+    };
+});
 
 pub struct TestApp {
     // HTTPアドレス
@@ -13,6 +31,9 @@ pub struct TestApp {
 
 /// テスト用のHTTPサーバを起動する
 async fn spawn_app() -> TestApp {
+    // 最初だけログ設定を初期化する
+    Lazy::force(&TRACING);
+
     // :0を指定するとOSが空いているポートを自動的に割り当てる
     let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port");
     let port = listener.local_addr().unwrap().port();
@@ -36,9 +57,10 @@ async fn spawn_app() -> TestApp {
 /// テスト用のデータベースを作成し、接続プールを返す
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     // PostgreSQLに接僕
-    let mut connection = PgConnection::connect(&config.connection_string_without_db())
-        .await
-        .expect("Failed to connect to Postgres");
+    let mut connection =
+        PgConnection::connect(&config.connection_string_without_db().expose_secret())
+            .await
+            .expect("Failed to connect to Postgres");
 
     // データベースを作成
     connection
@@ -47,7 +69,7 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .expect("Failed to create database.");
 
     // データベース接続プールを作成
-    let connection_pool = PgPool::connect(&config.connection_string())
+    let connection_pool = PgPool::connect(&config.connection_string().expose_secret())
         .await
         .expect("Failed to connect to Postgres.");
 
